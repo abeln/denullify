@@ -1,5 +1,6 @@
 
 object Denullify extends App {
 //  MigrateTest.patchTestsFromStdin()
-  CollectImports.entry
+//  CollectImports.entry
+  EqSearch.entry()
 }
