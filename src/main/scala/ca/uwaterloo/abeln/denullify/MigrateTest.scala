@@ -1,3 +1,5 @@
+package ca.uwaterloo.abeln.denullify
+
 import java.io.{File, PrintWriter}
 
 import scala.io.Source

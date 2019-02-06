@@ -1,3 +1,5 @@
+package ca.uwaterloo.abeln.denullify
+
 import java.io.File
 
 object CollectImports {
@@ -5,8 +7,8 @@ object CollectImports {
   type Import = String
   type Stats = Map[Import, Int]
 
-  import scala.io.StdIn.readLine
   import scala.io.Source
+  import scala.io.StdIn.readLine
 
   def entry = {
     var i = 0

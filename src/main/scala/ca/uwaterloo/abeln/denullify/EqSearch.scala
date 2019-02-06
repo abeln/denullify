@@ -1,3 +1,5 @@
+package ca.uwaterloo.abeln.denullify
+
 import scala.io.StdIn.readLine
 
 object EqSearch {

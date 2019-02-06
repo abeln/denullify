@@ -1,12 +1,13 @@
-import org.scalatest.FlatSpec
-import org.scalatest._
-import Matchers._
+package ca.uwaterloo.abeln.denullify
+
+import org.scalatest.Matchers._
+import org.scalatest.{FlatSpec, _}
 
 import scala.io.Source
 
 class MigrateTestSpec extends FlatSpec {
 
-  import MigrateTest.patchTest
+  import ca.uwaterloo.abeln.denullify.MigrateTest.patchTest
 
   implicit def stringToSource(s: String): Source = Source.fromString(s)
 
