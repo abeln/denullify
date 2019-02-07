@@ -7,12 +7,19 @@ import org.objectweb.asm.commons.Method
 import org.objectweb.asm.tree.{ClassNode, FieldNode, MethodNode, TypeAnnotationNode}
 
 import scala.collection.JavaConverters._
+import play.api.libs.json._
+import play.api.libs.json.Reads._
+import play.api.libs.functional.syntax._
 
 object NullStats {
 
   case class ClassStats(packageName: String, name: String, fields: Seq[FieldStats], methods: Seq[MethodStats])
   case class FieldStats(name: String, desc: String, nnTpe: Boolean)
   case class MethodStats(name: String, desc: String, numParams: Int, nnParams: Seq[Int], nnRet: Boolean)
+
+  implicit val fieldWrites: Writes[FieldStats] = Json.writes[FieldStats]
+  implicit val methodWrites: Writes[MethodStats] = Json.writes[MethodStats]
+  implicit val classWrites: Writes[ClassStats] = Json.writes[ClassStats]
 
   def entry(): Unit = {
     val res = stats("lib/classes/java/util/HashMap.class")
@@ -25,6 +32,7 @@ object NullStats {
     val fStats = classNode.fields.asScala.filterNot(privateField).map(fieldStats).filter(_.nnTpe)
     val mStats = classNode.methods.asScala.filterNot(privateMethod).map(methodStats).filter(isNonNullMethod)
     val res = ClassStats("", classNode.name, fStats, mStats)
+    println(Json.prettyPrint(Json.toJson(res)))
     res
   }
 
