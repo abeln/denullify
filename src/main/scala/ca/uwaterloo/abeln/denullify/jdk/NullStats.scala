@@ -1,6 +1,8 @@
 package ca.uwaterloo.abeln.denullify.jdk
 
-import java.io.FileInputStream
+import java.io.{File, FileInputStream}
+import java.util.jar.{JarEntry, JarFile}
+import java.util.stream.Collectors
 
 import org.objectweb.asm._
 import org.objectweb.asm.commons.Method
@@ -8,8 +10,6 @@ import org.objectweb.asm.tree.{ClassNode, FieldNode, MethodNode, TypeAnnotationN
 
 import scala.collection.JavaConverters._
 import play.api.libs.json._
-import play.api.libs.json.Reads._
-import play.api.libs.functional.syntax._
 
 object NullStats {
 
@@ -22,18 +22,21 @@ object NullStats {
   implicit val classWrites: Writes[ClassStats] = Json.writes[ClassStats]
 
   def entry(): Unit = {
-    val res = stats("lib/classes/java/util/HashMap.class")
+    val jarFile = new JarFile("lib/jdk8-2.6.0.jar")
+    val entries = jarFile.stream()
+    val classStats: Seq[ClassStats] = entries.filter(_.getName.endsWith(".class")).map[ClassStats] {
+      entry => stats(jarFile, entry)
+    }.iterator().asScala.toSeq
+//    println(Json.prettyPrint(Json.toJson(classStats)))
   }
 
-  def stats(clazz: String): ClassStats = {
-    val reader = new ClassReader(new FileInputStream(clazz))
+  def stats(jar: JarFile, entry: JarEntry): ClassStats = {
+    val reader = new ClassReader(jar.getInputStream(entry))
     val classNode = new ClassNode()
     reader.accept(classNode, 0)
     val fStats = classNode.fields.asScala.filterNot(privateField).map(fieldStats).filter(_.nnTpe)
     val mStats = classNode.methods.asScala.filterNot(privateMethod).map(methodStats).filter(isNonNullMethod)
-    val res = ClassStats("", classNode.name, fStats, mStats)
-    println(Json.prettyPrint(Json.toJson(res)))
-    res
+    ClassStats(packageName(entry), classNode.name, fStats, mStats)
   }
 
   def privateField(field: FieldNode): Boolean = {
@@ -96,5 +99,10 @@ object NullStats {
 
   def fromJava[T](lst: java.util.List[T]): Seq[T] = {
     if (lst == null) Seq.empty[T] else lst.asScala
+  }
+
+  def packageName(entry: JarEntry): String = {
+    val name = entry.getName
+    name.substring(0, name.lastIndexOf('/')).replace("/", ".")
   }
 }
