@@ -1,8 +1,7 @@
 package ca.uwaterloo.abeln.denullify.jdk
 
-import java.io.{File, FileInputStream}
 import java.util.jar.{JarEntry, JarFile}
-import java.util.stream.Collectors
+import java.io.PrintWriter
 
 import org.objectweb.asm._
 import org.objectweb.asm.commons.Method
@@ -13,7 +12,7 @@ import play.api.libs.json._
 
 object NullStats {
 
-  case class ClassStats(packageName: String, name: String, fields: Seq[FieldStats], methods: Seq[MethodStats])
+  case class ClassStats(name: String, fields: Seq[FieldStats], methods: Seq[MethodStats])
   case class FieldStats(name: String, desc: String, nnTpe: Boolean)
   case class MethodStats(name: String, desc: String, numParams: Int, nnParams: Seq[Int], nnRet: Boolean)
 
@@ -27,7 +26,7 @@ object NullStats {
     val classStats: Seq[ClassStats] = entries.filter(_.getName.endsWith(".class")).map[ClassStats] {
       entry => stats(jarFile, entry)
     }.iterator().asScala.toSeq
-//    println(Json.prettyPrint(Json.toJson(classStats)))
+    new PrintWriter("explicit-nulls-stdlib.json") { write(Json.prettyPrint(Json.toJson(classStats))); close }
   }
 
   def stats(jar: JarFile, entry: JarEntry): ClassStats = {
@@ -36,7 +35,7 @@ object NullStats {
     reader.accept(classNode, 0)
     val fStats = classNode.fields.asScala.filterNot(privateField).map(fieldStats).filter(_.nnTpe)
     val mStats = classNode.methods.asScala.filterNot(privateMethod).map(methodStats).filter(isNonNullMethod)
-    ClassStats(packageName(entry), classNode.name, fStats, mStats)
+    ClassStats(classNode.name, fStats, mStats)
   }
 
   def privateField(field: FieldNode): Boolean = {
@@ -99,10 +98,5 @@ object NullStats {
 
   def fromJava[T](lst: java.util.List[T]): Seq[T] = {
     if (lst == null) Seq.empty[T] else lst.asScala
-  }
-
-  def packageName(entry: JarEntry): String = {
-    val name = entry.getName
-    name.substring(0, name.lastIndexOf('/')).replace("/", ".")
   }
 }
