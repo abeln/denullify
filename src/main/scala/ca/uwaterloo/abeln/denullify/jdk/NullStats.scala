@@ -12,6 +12,10 @@ import play.api.libs.json._
 
 object NullStats {
 
+  var fieldCount: Int = 0
+  var methodCount: Int = 0
+  var classCount: Int = 0
+
   case class ClassStats(name: String, fields: Seq[FieldStats], methods: Seq[MethodStats])
   case class FieldStats(name: String, desc: String, nnTpe: Boolean)
   case class MethodStats(name: String, desc: String, numParams: Int, nnParams: Seq[Int], nnRet: Boolean)
@@ -27,6 +31,9 @@ object NullStats {
       entry => stats(jarFile, entry)
     }.iterator().asScala.toSeq
     new PrintWriter("explicit-nulls-stdlib.json") { write(Json.prettyPrint(Json.toJson(classStats))); close }
+    println(s"classes: $classCount")
+    println(s"fields: $fieldCount")
+    println(s"methods: $methodCount")
   }
 
   def stats(jar: JarFile, entry: JarEntry): ClassStats = {
@@ -35,6 +42,11 @@ object NullStats {
     reader.accept(classNode, 0)
     val fStats = classNode.fields.asScala.filterNot(privateField).map(fieldStats).filter(_.nnTpe)
     val mStats = classNode.methods.asScala.filterNot(privateMethod).map(methodStats).filter(isNonNullMethod)
+    fieldCount += fStats.length
+    methodCount += mStats.length
+    if (fieldCount + methodCount > 0) classCount += 1
+    // TODO(abeln): return an option, and only return stats if there's at least one field or method with useful
+    // info.
     ClassStats(fqName(classNode.name), fStats, mStats)
   }
 
