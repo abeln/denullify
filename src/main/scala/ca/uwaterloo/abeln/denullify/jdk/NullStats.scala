@@ -35,7 +35,11 @@ object NullStats {
     reader.accept(classNode, 0)
     val fStats = classNode.fields.asScala.filterNot(privateField).map(fieldStats).filter(_.nnTpe)
     val mStats = classNode.methods.asScala.filterNot(privateMethod).map(methodStats).filter(isNonNullMethod)
-    ClassStats(classNode.name, fStats, mStats)
+    ClassStats(fqName(classNode.name), fStats, mStats)
+  }
+
+  def fqName(name: String): String = {
+    name.replace("/", ".")
   }
 
   def privateField(field: FieldNode): Boolean = {
@@ -93,7 +97,7 @@ object NullStats {
   }
 
   def isNonNullMethod(method: MethodStats): Boolean = {
-    method.nnParams.nonEmpty || method.nnParams.nonEmpty
+    method.nnParams.nonEmpty || method.nnRet
   }
 
   def fromJava[T](lst: java.util.List[T]): Seq[T] = {
