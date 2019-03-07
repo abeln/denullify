@@ -20,20 +20,23 @@ object NullStats {
   case class FieldStats(name: String, desc: String, nnTpe: Boolean)
   case class MethodStats(name: String, desc: String, numParams: Int, nnParams: Seq[Int], nnRet: Boolean)
 
-  implicit val fieldWrites: Writes[FieldStats] = Json.writes[FieldStats]
-  implicit val methodWrites: Writes[MethodStats] = Json.writes[MethodStats]
-  implicit val classWrites: Writes[ClassStats] = Json.writes[ClassStats]
-
   def entry(): Unit = {
     val jarFile = new JarFile("lib/jdk8-2.6.0.jar")
     val entries = jarFile.stream()
     val classStats: Seq[ClassStats] = entries.filter(_.getName.endsWith(".class")).map[ClassStats] {
       entry => stats(jarFile, entry)
     }.iterator().asScala.toSeq
-    new PrintWriter("explicit-nulls-stdlib.json") { write(Json.prettyPrint(Json.toJson(classStats))); close }
+    toJson(classStats)
     println(s"classes: $classCount")
     println(s"fields: $fieldCount")
     println(s"methods: $methodCount")
+  }
+
+  def toJson(classStats: Seq[ClassStats]): Unit = {
+    implicit val fieldWrites: Writes[FieldStats] = Json.writes[FieldStats]
+    implicit val methodWrites: Writes[MethodStats] = Json.writes[MethodStats]
+    implicit val classWrites: Writes[ClassStats] = Json.writes[ClassStats]
+    new PrintWriter("explicit-nulls-stdlib.json") { write(Json.prettyPrint(Json.toJson(classStats))); close }
   }
 
   def stats(jar: JarFile, entry: JarEntry): ClassStats = {
