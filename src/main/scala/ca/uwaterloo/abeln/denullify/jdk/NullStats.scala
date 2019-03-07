@@ -26,13 +26,44 @@ object NullStats {
     val classStats: Seq[ClassStats] = entries.filter(_.getName.endsWith(".class")).map[ClassStats] {
       entry => stats(jarFile, entry)
     }.iterator().asScala.toSeq
-    toJson(classStats)
+//    printJson(classStats)
+    printXml(classStats)
     println(s"classes: $classCount")
     println(s"fields: $fieldCount")
     println(s"methods: $methodCount")
   }
 
-  def toJson(classStats: Seq[ClassStats]): Unit = {
+  def printXml(classStats: Seq[ClassStats]): Unit = {
+    def classToXml(clazz: ClassStats): scala.xml.Elem = {
+      <class>
+        <name>{clazz.name}</name>
+        <fields>{clazz.fields.map(fieldToXml)}</fields>
+        <methods>{clazz.methods.map(methodToXml)}</methods>
+      </class>
+    }
+
+    def fieldToXml(field: FieldStats): scala.xml.Elem = {
+      <field>
+        <name>{field.name}</name>
+        <desc>{field.desc}</desc>
+        <ret>{field.nnTpe}</ret>
+      </field>
+    }
+    def methodToXml(method: MethodStats): scala.xml.Elem = {
+      <method>
+        <name>{method.name}</name>
+        <desc>{method.desc}</desc>
+        <params>{method.nnParams.map(p => <param>{p}</param>)}</params>
+        <ret>{method.nnRet}</ret>
+      </method>
+    }
+
+    val xml = <null-stats>{classStats.map(classToXml)}</null-stats>
+    scala.xml.XML.save("explicit-nulls-stdlib.xml", xml)
+    val pp = new scala.xml.PrettyPrinter(24, 4)
+  }
+
+  def printJson(classStats: Seq[ClassStats]): Unit = {
     implicit val fieldWrites: Writes[FieldStats] = Json.writes[FieldStats]
     implicit val methodWrites: Writes[MethodStats] = Json.writes[MethodStats]
     implicit val classWrites: Writes[ClassStats] = Json.writes[ClassStats]
