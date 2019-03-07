@@ -1,7 +1,7 @@
 package ca.uwaterloo.abeln.denullify.jdk
 
 import java.util.jar.{JarEntry, JarFile}
-import java.io.PrintWriter
+import java.io.{FileOutputStream, PrintWriter}
 
 import org.objectweb.asm._
 import org.objectweb.asm.commons.Method
@@ -59,8 +59,10 @@ object NullStats {
     }
 
     val xml = <null-stats>{classStats.map(classToXml)}</null-stats>
-    scala.xml.XML.save("explicit-nulls-stdlib.xml", xml)
-    val pp = new scala.xml.PrettyPrinter(24, 4)
+//    scala.xml.XML.save("explicit-nulls-stdlib.xml", xml)
+    val pp = new scala.xml.PrettyPrinter(100, 4)
+    // TODO(abeln): print out encoding and other xml metadata?
+    new PrintWriter("explicit-nulls-stdlib.xml") { write(pp.format(xml)); close }
   }
 
   def printJson(classStats: Seq[ClassStats]): Unit = {
