@@ -1,7 +1,7 @@
 package ca.uwaterloo.abeln.denullify.jdk
 
 import java.util.jar.{JarEntry, JarFile}
-import java.io.{FileOutputStream, PrintWriter}
+import java.io.{File, FileOutputStream, PrintWriter}
 
 import org.objectweb.asm._
 import org.objectweb.asm.commons.Method
@@ -26,11 +26,52 @@ object NullStats {
     val classStats: Seq[ClassStats] = entries.filter(_.getName.endsWith(".class")).map[ClassStats] {
       entry => stats(jarFile, entry)
     }.iterator().asScala.toSeq
-//    printJson(classStats)
-    printXml(classStats)
+    // printJson(classStats)
+    // printXml(classStats)
+    printText(classStats)
     println(s"classes: $classCount")
     println(s"fields: $fieldCount")
     println(s"methods: $methodCount")
+  }
+
+  def printText(classStats: Seq[ClassStats]): Unit = {
+    val writer = new PrintWriter(new File("explicit-nulls-meta.txt"))
+
+    val SPACE = 2
+    def tab(): Unit = writer.write(" " * SPACE)
+
+    def printFields(fields: Seq[FieldStats]): Unit = {
+      writer.println(fields.size)
+      fields foreach { field =>
+        tab(); writer.println(field.name)
+        tab(); tab(); writer.println(field.desc)
+        tab(); tab(); writer.println(field.nnTpe)
+      }
+    }
+
+    def printMethods(methods: Seq[MethodStats]): Unit = {
+      writer.println(methods.size)
+      methods foreach { method =>
+        tab(); writer.println(method.name)
+        tab(); tab(); writer.println(method.desc)
+        tab(); tab(); writer.println(method.nnRet)
+        tab(); tab(); writer.println(method.nnParams.size)
+        method.nnParams foreach { p =>
+          tab(); tab(); tab(); writer.println(p)
+        }
+      }
+    }
+
+    try {
+      writer.println(classStats.size)
+      classStats foreach { stats =>
+        writer.println(stats.name)
+        printFields(stats.fields)
+        printMethods(stats.methods)
+      }
+    } finally {
+      writer.close()
+    }
   }
 
   def printXml(classStats: Seq[ClassStats]): Unit = {
