@@ -45,7 +45,8 @@ object NullStats {
       fields foreach { field =>
         tab(); writer.println(field.name)
         tab(); tab(); writer.println(field.desc)
-        tab(); tab(); writer.println(field.nnTpe)
+        assert(field.nnTpe)
+        // tab(); tab(); writer.println(field.nnTpe) should be always true
       }
     }
 
@@ -54,7 +55,8 @@ object NullStats {
       methods foreach { method =>
         tab(); writer.println(method.name)
         tab(); tab(); writer.println(method.desc)
-        tab(); tab(); writer.println(method.nnRet)
+        assert(method.nnRet)
+        // tab(); tab(); writer.println(method.nnRet) // should be always true
         //tab(); tab(); writer.println(method.nnParams.size)
         //method.nnParams foreach { p =>
         //  tab(); tab(); tab(); writer.println(p)
@@ -186,7 +188,8 @@ object NullStats {
   }
 
   def isNonNullMethod(method: MethodStats): Boolean = {
-    method.nnParams.nonEmpty || method.nnRet
+    // method.nnParams.nonEmpty || method.nnRet
+    method.nnRet // we're only interested in the return type
   }
 
   def fromJava[T](lst: java.util.List[T]): Seq[T] = {
