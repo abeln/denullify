@@ -55,10 +55,10 @@ object NullStats {
         tab(); writer.println(method.name)
         tab(); tab(); writer.println(method.desc)
         tab(); tab(); writer.println(method.nnRet)
-        tab(); tab(); writer.println(method.nnParams.size)
-        method.nnParams foreach { p =>
-          tab(); tab(); tab(); writer.println(p)
-        }
+        //tab(); tab(); writer.println(method.nnParams.size)
+        //method.nnParams foreach { p =>
+        //  tab(); tab(); tab(); writer.println(p)
+        //}
       }
     }
 
