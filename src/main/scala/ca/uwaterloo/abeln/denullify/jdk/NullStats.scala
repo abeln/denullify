@@ -12,6 +12,11 @@ import play.api.libs.json._
 
 object NullStats {
 
+  var totalFieldCount: Int = 0
+  var totalMethodCount: Int = 0
+  var totalClassCount: Int = 0
+
+  // Useful (non-null) ones
   var fieldCount: Int = 0
   var methodCount: Int = 0
   var classCount: Int = 0
@@ -29,6 +34,9 @@ object NullStats {
     // printJson(classStats)
     // printXml(classStats)
     printText(classStats)
+    println(s"total classes: $totalClassCount")
+    println(s"total non-private fields: $totalFieldCount")
+    println(s"total non-private methods: $totalMethodCount")
     println(s"classes: $classCount")
     println(s"fields: $fieldCount")
     println(s"methods: $methodCount")
@@ -119,8 +127,13 @@ object NullStats {
     val reader = new ClassReader(jar.getInputStream(entry))
     val classNode = new ClassNode()
     reader.accept(classNode, 0)
-    val fStats = classNode.fields.asScala.filterNot(privateField).map(fieldStats).filter(_.nnTpe)
-    val mStats = classNode.methods.asScala.filterNot(privateMethod).map(methodStats).filter(isNonNullMethod)
+    val fStatsRaw = classNode.fields.asScala.filterNot(privateField).map(fieldStats)
+    val mStatsRaw = classNode.methods.asScala.filterNot(privateMethod).map(methodStats)
+    totalClassCount += 1
+    totalFieldCount += fStatsRaw.length
+    totalMethodCount += mStatsRaw.length
+    val fStats = fStatsRaw.filter(_.nnTpe)
+    val mStats = mStatsRaw.filter(isNonNullMethod)
     fieldCount += fStats.length
     methodCount += mStats.length
     if (fieldCount + methodCount > 0) classCount += 1
